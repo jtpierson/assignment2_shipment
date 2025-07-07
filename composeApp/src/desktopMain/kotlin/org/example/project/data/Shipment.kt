@@ -42,8 +42,8 @@ class Shipment(
         get() = _updateHistory
 
 
-    fun addNote(update : ShippingUpdate) {
-        _updateHistory.add(update)
+    fun addNote(note : String) {
+        _notes.add(note)
         notifyObservers()
     }
 
@@ -52,6 +52,7 @@ class Shipment(
         notifyObservers()
     }
 
+    // *** markX functions encapsulate the state changes that are triggered by the UpdateStrategy classes
     fun markShipped(expectedDelivery : Long, timestamp : Long) {
         val oldStatus = status
         status = "shipped"
@@ -64,6 +65,71 @@ class Shipment(
         )
         addUpdate(update)
     }
+
+    fun markRelocated(newLocation : String, timestamp : Long) {
+        val update = ShippingUpdate(
+            previousStatus = status,
+            newStatus = status,
+            timestamp = timestamp
+        )
+
+        currentLocation = newLocation
+        addUpdate(update)
+    }
+
+    fun markDelivered(timestamp: Long) {
+        val oldStatus = status
+        status = "delivered"
+
+        val update = ShippingUpdate(
+            previousStatus = oldStatus,
+            newStatus = status,
+            timestamp = timestamp
+        )
+
+        addUpdate(update)
+    }
+
+    fun markDelayed(newExpectedDelivery : Long, timestamp : Long) {
+        val oldStatus = status
+        status = "late"
+
+        expectedDeliveryDateTimestamp = newExpectedDelivery
+
+        val update = ShippingUpdate (
+            previousStatus = oldStatus,
+            newStatus = status,
+            timestamp = timestamp
+            )
+
+        addUpdate(update)
+    }
+
+    fun markLost(timestamp : Long) {
+        val oldStatus = status
+        status = "lost"
+
+        val update = ShippingUpdate(
+            previousStatus = oldStatus,
+            newStatus = status,
+            timestamp = timestamp
+        )
+
+        addUpdate(update)
+    }
+
+    fun markCanceled(timestamp : Long) {
+        val oldStatus = status
+        status = "canceled"
+
+        val update = ShippingUpdate(
+            previousStatus = oldStatus,
+            newStatus = status,
+            timestamp = timestamp
+        )
+    }
+
+
 
     override fun registerObserver(observer: Observer) {
         observers.add(observer)

@@ -15,21 +15,20 @@ class Shipment(
     var id: String = id
         private set
 
-    private var status: String = status
-        set(value) {
+    var status: String = status
+        private set(value) {
             field = value
             notifyObservers()
         }
 
-
-    private var expectedDeliveryDateTimestamp: Long = expectedDeliveryDateTimestamp
-        set(value) {
+    var expectedDeliveryDateTimestamp: Long = expectedDeliveryDateTimestamp
+        private set(value) {
             field = value
             notifyObservers()
         }
 
-    private var currentLocation: String = currentLocation
-        set(value) {
+    var currentLocation: String = currentLocation
+        private set(value) {
             field = value
             notifyObservers()
         }
@@ -42,15 +41,41 @@ class Shipment(
     val updateHistory: List<ShippingUpdate>
         get() = _updateHistory
 
+
+    fun addNote(update : ShippingUpdate) {
+        _updateHistory.add(update)
+        notifyObservers()
+    }
+
+    fun addUpdate(update : ShippingUpdate) {
+        _updateHistory.add(update)
+        notifyObservers()
+    }
+
+    fun markShipped(expectedDelivery : Long, timestamp : Long) {
+        val oldStatus = status
+        status = "shipped"
+        expectedDeliveryDateTimestamp = expectedDelivery
+
+        val update = ShippingUpdate(
+            previousStatus = oldStatus,
+            newStatus = status,
+            timestamp = timestamp
+        )
+        addUpdate(update)
+    }
+
     override fun registerObserver(observer: Observer) {
-        TODO("Not yet implemented")
+        observers.add(observer)
     }
 
     override fun removeObserver(observer: Observer) {
-        TODO("Not yet implemented")
+        observers.remove(observer)
     }
 
     override fun notifyObservers() {
-        TODO("Not yet implemented")
+        for (observer in observers) {
+            observer.update(this)
+        }
     }
 }

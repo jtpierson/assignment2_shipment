@@ -1,4 +1,4 @@
-rootProject.name = "KotlinProject"
+rootProject.name = "assignment2_shipment"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

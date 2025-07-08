@@ -1,6 +1,6 @@
 package org.example.project.update
 
-class UpdateStrategySelector {
+object UpdateStrategySelector {
 
     private val strategies : Map<String, UpdateStrategy> = mapOf(
         "created" to CreatedStrategy(),

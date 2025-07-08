@@ -5,7 +5,7 @@ import org.example.project.data.Shipment
 import org.example.project.update.UpdateStrategySelector
 import java.io.File
 
-class TrackingSimulator {
+object TrackingSimulator {
     private val shipments = mutableMapOf<String, Shipment>()
 
     fun findShipment(id : String): Shipment? {

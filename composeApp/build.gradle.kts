@@ -12,7 +12,7 @@ kotlin {
     
     sourceSets {
         val desktopMain by getting
-        
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -23,8 +23,15 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtimeCompose)
         }
-        commonTest.dependencies {
+        val desktopTest by getting
+        desktopTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotest.api)
+            implementation(libs.kotest.engine)
+            implementation(libs.kotest.assertions)
+            implementation(libs.kotest.runner)
+            implementation("org.jetbrains.kotlin:kotlin-reflect")
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
@@ -45,3 +52,8 @@ compose.desktop {
         }
     }
 }
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+

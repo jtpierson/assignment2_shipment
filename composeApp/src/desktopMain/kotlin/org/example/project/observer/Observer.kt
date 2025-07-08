@@ -1,5 +1,5 @@
 package org.example.project.observer
 
-interface Observer {
-    fun update(subject: Subject)
+interface Observer<T> {
+    fun update(subject: T)
 }

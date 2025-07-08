@@ -17,28 +17,28 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 import assignment2_shipment.composeapp.generated.resources.Res
 import assignment2_shipment.composeapp.generated.resources.compose_multiplatform
+import org.example.project.tracking.TrackerViewHelper
+import org.example.project.tracking.TrackingSimulator
+import org.example.project.ui.UserInterface
+import java.io.File
 
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+    val viewHelper = remember { TrackerViewHelper() }
+
+    LaunchedEffect(Unit) {
+        val file = File("../test.txt")
+        if (file.exists()) {
+            try {
+                TrackingSimulator.runSimulation(file)
+            } catch (e: Exception) {
+                println("Simulation error: ${e.message}")
+                e.printStackTrace()
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
-            }
+        } else {
+            println("File not found!")
         }
     }
+
+    UserInterface(viewHelper)
 }

@@ -8,9 +8,9 @@ class Shipment(
     status : String,
     expectedDeliveryDateTimestamp : Long,
     currentLocation : String
-) : Subject {
+) : Subject<Shipment> {
 
-    private val observers = mutableListOf<Observer>()
+    private val observers = mutableListOf<Observer<Shipment>>()
 
     var id: String = id
         private set
@@ -67,8 +67,10 @@ class Shipment(
     }
 
     fun markRelocated(newLocation : String, timestamp : Long) {
+        val oldStatus = status
+        status = "relocated"
         val update = ShippingUpdate(
-            previousStatus = status,
+            previousStatus = oldStatus,
             newStatus = status,
             timestamp = timestamp
         )
@@ -129,13 +131,11 @@ class Shipment(
         )
     }
 
-
-
-    override fun registerObserver(observer: Observer) {
+    override fun registerObserver(observer: Observer<Shipment>) {
         observers.add(observer)
     }
 
-    override fun removeObserver(observer: Observer) {
+    override fun removeObserver(observer: Observer<Shipment>) {
         observers.remove(observer)
     }
 

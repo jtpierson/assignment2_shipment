@@ -1,5 +1,6 @@
 package org.example.project.tracking
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.example.project.data.Shipment
 import org.example.project.update.UpdateStrategySelector
@@ -16,12 +17,17 @@ object TrackingSimulator {
         shipments[shipment.id] = shipment
     }
 
-    fun runSimulation(file : File) = runBlocking {
-        file.forEachLine { line ->
-            processLine(line)
-
-        }
+    fun runSimulation(file: File) {
+        Thread {
+            file.forEachLine { line ->
+                processLine(line)
+                println("Processed update: $line")
+                Thread.sleep(1000)  // ✅ Simulate delay
+            }
+        }.start()
     }
+
+
 
     private fun processLine(line : String) {
         val data = line.split(",")

@@ -1,7 +1,7 @@
 package org.example.project.observer
 
-interface Subject {
-    fun registerObserver(observer : Observer)
-    fun removeObserver(observer : Observer)
+interface Subject<T> {
+    fun registerObserver(observer : Observer<T>)
+    fun removeObserver(observer : Observer<T>)
     fun notifyObservers()
 }

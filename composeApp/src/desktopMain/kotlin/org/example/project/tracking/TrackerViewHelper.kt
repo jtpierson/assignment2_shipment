@@ -1,80 +1,67 @@
 package org.example.project.tracking
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import org.example.project.data.Shipment
 import org.example.project.observer.Observer
 import org.example.project.observer.Subject
 
-class TrackerViewHelper : Observer {
+class TrackerViewHelper : Observer<Shipment> {
 
-    var shipmentId = mutableStateOf("")
-        private set
+    // Holds all currently tracked shipments and their UI states
+    val trackedShipments = mutableStateListOf<TrackedShipment>()
 
-    var shipmentTotes = mutableStateOf<List<String>>(emptyList())
-        private set
+    override fun update(subject: Shipment) {
+        val tracked = trackedShipments.find { it.id == subject.id } ?: return
 
-    var shipmentUpdateHistory = mutableStateOf<List<String>>(emptyList())
-        private set
+        tracked.status.value = subject.status
+        tracked.location.value = subject.currentLocation
+        tracked.expectedDelivery.value = formatTimestamp(subject.expectedDeliveryDateTimestamp)
 
-    var expectedShipmentDeliveryDate = mutableStateOf("")
-        private set
+        tracked.notes.clear()
+        tracked.notes.addAll(subject.notes)
 
-    var shipmentStatus = mutableStateOf("")
-        private set
-
-    private val trackedShipments: MutableMap<String, Shipment> = mutableMapOf()
-
-    override fun update(subject: Subject) {
-        val shipment = subject as Shipment
-
-        shipmentId.value = shipment.id
-        shipmentTotes.value = shipment.notes
-        shipmentStatus.value = shipment.status
-        expectedShipmentDeliveryDate.value = formatTimestamp(shipment.expectedDeliveryDateTimestamp)
-
-        shipmentUpdateHistory.value = shipment.updateHistory.map {
-            "Shipment went from ${it.previousStatus} to ${it.newStatus} on ${formatTimestamp(it.timestamp)}"
-        }
+        tracked.updates.clear()
+        tracked.updates.addAll(
+            subject.updateHistory.map {
+                "Shipment went from ${it.previousStatus} to ${it.newStatus} on ${formatTimestamp(it.timestamp)}"
+            }
+        )
     }
 
-    private fun formatTimestamp(timestamp: Long): String {
-        // Format to readable string
-        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        return formatter.format(java.util.Date(timestamp))
-    }
-
-    fun trackShipment(id : String) {
+    fun trackShipment(id: String) {
         val shipment = TrackingSimulator.findShipment(id)
 
         if (shipment != null) {
-            shipment.registerObserver(this)
-            trackedShipments[shipment.id] = shipment
-            update(shipment)
-        } else {
-            shipmentId.value = ""
-            shipmentStatus.value = "Shipment was not found"
-            shipmentTotes.value = emptyList()
-            expectedShipmentDeliveryDate.value = ""
-            shipmentUpdateHistory.value = emptyList()
-        }
+            if (trackedShipments.any { it.id == shipment.id }) return // Already tracked
 
+            shipment.registerObserver(this)
+
+            val tracked = TrackedShipment(
+                id = shipment.id,
+                status = mutableStateOf(shipment.status),
+                location = mutableStateOf(shipment.currentLocation),
+                expectedDelivery = mutableStateOf(formatTimestamp(shipment.expectedDeliveryDateTimestamp)),
+                notes = mutableStateListOf<String>().apply { addAll(shipment.notes) },
+                updates = mutableStateListOf<String>().apply {
+                    addAll(shipment.updateHistory.map {
+                        "Shipment went from ${it.previousStatus} to ${it.newStatus} on ${formatTimestamp(it.timestamp)}"
+                    })
+                }
+            )
+
+            trackedShipments += tracked
+        }
     }
 
     fun stopTracking(id: String) {
-        val shipment = trackedShipments[id] ?: return
-
-        shipment.removeObserver(this)
-        trackedShipments.remove(id)
-
-        // Optional: if this is the currently shown shipment, clear UI state
-        if (shipmentId.value == id) {
-            shipmentId.value = ""
-            shipmentStatus.value = ""
-            shipmentTotes.value = emptyList()
-            expectedShipmentDeliveryDate.value = ""
-            shipmentUpdateHistory.value = emptyList()
-        }
+        val tracked = trackedShipments.find { it.id == id } ?: return
+        TrackingSimulator.findShipment(id)?.removeObserver(this)
+        trackedShipments.remove(tracked)
     }
 
-
+    private fun formatTimestamp(timestamp: Long): String {
+        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        return formatter.format(java.util.Date(timestamp))
+    }
 }

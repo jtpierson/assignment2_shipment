@@ -1,7 +1,8 @@
 package org.example.project.tracking
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import org.example.project.data.Shipment
 import org.example.project.update.UpdateStrategySelector
 import java.io.File
@@ -17,14 +18,12 @@ object TrackingSimulator {
         shipments[shipment.id] = shipment
     }
 
-    fun runSimulation(file: File) {
-        Thread {
-            file.forEachLine { line ->
-                processLine(line)
-                println("Processed update: $line")
-                Thread.sleep(1000)  // ✅ Simulate delay
-            }
-        }.start()
+    suspend fun runSimulation(file: File) {
+        for (line in file.readLines()) {
+            processLine(line)
+            println("Processed update: $line")
+            delay(1000) // ✅ Now allowed: you're in a suspendable loop
+        }
     }
 
 

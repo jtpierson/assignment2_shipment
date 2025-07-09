@@ -11,8 +11,10 @@ class TrackerViewHelper : Observer<Shipment> {
     // Holds all currently tracked shipments and their UI states
     val trackedShipments = mutableStateListOf<TrackedShipment>()
 
+    // When shipment is changed, notifyObservers() is called and this updates it for the UI
     override fun update(subject: Shipment) {
-        val tracked = trackedShipments.find { it.id == subject.id } ?: return
+        // Find matching shipment
+        val tracked = trackedShipments.find { candidate -> candidate.id == subject.id } ?: return
 
         tracked.status.value = subject.status
         tracked.location.value = subject.currentLocation
@@ -23,8 +25,8 @@ class TrackerViewHelper : Observer<Shipment> {
 
         tracked.updates.clear()
         tracked.updates.addAll(
-            subject.updateHistory.map {
-                "Shipment went from ${it.previousStatus} to ${it.newStatus} on ${formatTimestamp(it.timestamp)}"
+            subject.updateHistory.map { trackedUpdate ->
+                "Shipment went from ${trackedUpdate.previousStatus} to ${trackedUpdate.newStatus} on ${formatTimestamp(trackedUpdate.timestamp)}"
             }
         )
     }
@@ -33,7 +35,7 @@ class TrackerViewHelper : Observer<Shipment> {
         val shipment = TrackingSimulator.findShipment(id)
 
         if (shipment != null) {
-            if (trackedShipments.any { it.id == shipment.id }) return // Already tracked
+            if (trackedShipments.any {trackedShipment -> trackedShipment.id == shipment.id }) return // Already tracked
 
             shipment.registerObserver(this)
 
@@ -44,8 +46,8 @@ class TrackerViewHelper : Observer<Shipment> {
                 expectedDelivery = mutableStateOf(formatTimestamp(shipment.expectedDeliveryDateTimestamp)),
                 notes = mutableStateListOf<String>().apply { addAll(shipment.notes) },
                 updates = mutableStateListOf<String>().apply {
-                    addAll(shipment.updateHistory.map {
-                        "Shipment went from ${it.previousStatus} to ${it.newStatus} on ${formatTimestamp(it.timestamp)}"
+                    addAll(shipment.updateHistory.map {update ->
+                        "Shipment went from ${update.previousStatus} to ${update.newStatus} on ${formatTimestamp(update.timestamp)}"
                     })
                 }
             )
@@ -55,7 +57,7 @@ class TrackerViewHelper : Observer<Shipment> {
     }
 
     fun stopTracking(id: String) {
-        val tracked = trackedShipments.find { it.id == id } ?: return
+        val tracked = trackedShipments.find {trackedShipment -> trackedShipment.id == id } ?: return
         TrackingSimulator.findShipment(id)?.removeObserver(this)
         trackedShipments.remove(tracked)
     }

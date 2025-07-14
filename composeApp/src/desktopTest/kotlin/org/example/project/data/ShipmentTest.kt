@@ -89,12 +89,14 @@ class ShipmentTest : FunSpec({
     }
 
     // *** markCanceled checks
-    test("markCanceled should update status but not update history") {
+    test("markCanceled should update status and add update entry") {
         val shipment = Shipment("S9", "created", 0L, "San Francisco")
         shipment.markCanceled(timestamp = 6666L)
 
         shipment.status shouldBe "canceled"
-        shipment.updateHistory shouldHaveSize 0 // Based on your current code
+        shipment.updateHistory shouldHaveSize 1
+        shipment.updateHistory.last().newStatus shouldBe "canceled"
+        shipment.updateHistory.last().timestamp shouldBe 6666L
     }
 
     // *** Observer management

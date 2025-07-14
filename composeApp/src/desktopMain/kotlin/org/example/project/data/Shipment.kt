@@ -102,7 +102,7 @@ class Shipment(
             previousStatus = oldStatus,
             newStatus = status,
             timestamp = timestamp
-            )
+        )
 
         addUpdate(update)
     }
@@ -129,6 +129,8 @@ class Shipment(
             newStatus = status,
             timestamp = timestamp
         )
+
+        addUpdate(update)
     }
 
     override fun registerObserver(observer: Observer<Shipment>) {

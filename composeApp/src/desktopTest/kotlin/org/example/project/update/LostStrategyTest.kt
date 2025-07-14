@@ -8,10 +8,10 @@ class LostStrategyTest : FunSpec({
 
     // *** apply marks shipment as lost
     test("LostStrategy should mark shipment as lost") {
-        val shipment = Shipment("S1", "relocated", 0L, "San Diego")
+        val shipment = Shipment("s10000", "relocated", 0L, "San Diego")
         val result = LostStrategy().apply(
             shipment,
-            listOf("lost", "S1", "123456789")
+            listOf("lost", "s10000", "123456789")
         )
 
         result shouldBe shipment
@@ -22,23 +22,23 @@ class LostStrategyTest : FunSpec({
 
     // *** apply returns null when shipment is null and data is valid
     test("LostStrategy should return null when shipment is null and data is valid") {
-        val result = LostStrategy().apply(null, listOf("lost", "S2", "123456789"))
+        val result = LostStrategy().apply(null, listOf("lost", "s10001", "123456789"))
         result shouldBe null
     }
 
     // *** apply returns null when data is too short and shipment is present
     test("LostStrategy should return null when data is too short") {
-        val shipment = Shipment("S3", "relocated", 0L, "Denver")
-        val result = LostStrategy().apply(shipment, listOf("lost", "S3")) // missing timestamp
+        val shipment = Shipment("s10002", "relocated", 0L, "Denver")
+        val result = LostStrategy().apply(shipment, listOf("lost", "s10002")) // missing timestamp
         result shouldBe null
     }
 
     // *** apply returns null when timestamp is invalid
     test("LostStrategy should return null when timestamp is not a number") {
-        val shipment = Shipment("S4", "relocated", 0L, "Las Vegas")
+        val shipment = Shipment("s10003", "relocated", 0L, "Las Vegas")
         val result = LostStrategy().apply(
             shipment,
-            listOf("lost", "S4", "not-a-timestamp")
+            listOf("lost", "s10003", "not-a-timestamp")
         )
         result shouldBe null
     }

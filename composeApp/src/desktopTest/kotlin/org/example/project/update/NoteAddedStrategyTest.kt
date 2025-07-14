@@ -9,10 +9,10 @@ class NoteAddedStrategyTest : FunSpec({
 
     // *** apply adds note to shipment when valid
     test("NoteAddedStrategy should add note to shipment when data is valid") {
-        val shipment = Shipment("S1", "created", 0L, "Phoenix")
+        val shipment = Shipment("s10000", "created", 0L, "Phoenix")
         val result = NoteAddedStrategy().apply(
             shipment,
-            listOf("noteadded", "S1", "123456789", "Handle with care")
+            listOf("noteadded", "s10000", "123456789", "Handle with care")
         )
 
         result shouldBe shipment
@@ -23,17 +23,17 @@ class NoteAddedStrategyTest : FunSpec({
     test("NoteAddedStrategy should return null when shipment is null and data is valid") {
         val result = NoteAddedStrategy().apply(
             null,
-            listOf("noteadded", "S2", "123456789", "Important")
+            listOf("noteadded", "s10001", "123456789", "Important")
         )
         result shouldBe null
     }
 
     // *** apply returns null when data list is too short and shipment is present
     test("NoteAddedStrategy should return null when data list is too short and shipment is present") {
-        val shipment = Shipment("S3", "created", 0L, "Austin")
+        val shipment = Shipment("s10002", "created", 0L, "Austin")
         val result = NoteAddedStrategy().apply(
             shipment,
-            listOf("noteadded", "S3", "123456789") // missing note
+            listOf("noteadded", "s10002", "123456789") // missing note
         )
         result shouldBe null
     }
@@ -42,7 +42,7 @@ class NoteAddedStrategyTest : FunSpec({
     test("NoteAddedStrategy should return null when shipment is null and data is too short") {
         val result = NoteAddedStrategy().apply(
             null,
-            listOf("noteadded", "S4") // missing timestamp and note
+            listOf("noteadded", "s10003") // missing timestamp and note
         )
         result shouldBe null
     }

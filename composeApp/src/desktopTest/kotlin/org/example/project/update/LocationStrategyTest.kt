@@ -8,10 +8,10 @@ class LocationStrategyTest : FunSpec({
 
     // *** apply sets shipment status to relocated and updates location
     test("LocationStrategy should update status to relocated and change location") {
-        val shipment = Shipment("S4", "shipped", 0L, "Chicago")
+        val shipment = Shipment("s10000", "shipped", 0L, "Chicago")
         val result = LocationStrategy().apply(
             shipment,
-            listOf("location", "S4", "123456789", "Dallas")
+            listOf("location", "s10000", "123456789", "Dallas")
         )
 
         result shouldBe shipment
@@ -23,17 +23,17 @@ class LocationStrategyTest : FunSpec({
     test("LocationStrategy should return null when shipment is null and data is valid length") {
         val result = LocationStrategy().apply(
             null,
-            listOf("location", "S4", "123456789", "Dallas")
+            listOf("location", "s10001", "123456789", "Dallas")
         )
         result shouldBe null
     }
 
     // *** apply returns null when data list is too short and shipment is valid
     test("LocationStrategy should return null when data list is too short and shipment is valid") {
-        val shipment = Shipment("S5", "shipped", 0L, "Seattle")
+        val shipment = Shipment("s10002", "shipped", 0L, "Seattle")
         val result = LocationStrategy().apply(
             shipment,
-            listOf("location", "S5", "123456789") // missing location
+            listOf("location", "s10002", "123456789") // missing location
         )
         result shouldBe null
     }
@@ -42,17 +42,17 @@ class LocationStrategyTest : FunSpec({
     test("LocationStrategy should return null when shipment is null and data is too short") {
         val result = LocationStrategy().apply(
             null,
-            listOf("location", "S6") // missing timestamp and location
+            listOf("location", "s10003") // missing timestamp and location
         )
         result shouldBe null
     }
 
     // *** apply returns null when timestamp is not a number
     test("LocationStrategy should return null when timestamp is invalid") {
-        val shipment = Shipment("S7", "shipped", 0L, "Austin")
+        val shipment = Shipment("s10004", "shipped", 0L, "Austin")
         val result = LocationStrategy().apply(
             shipment,
-            listOf("location", "S7", "not-a-number", "Houston")
+            listOf("location", "s10004", "not-a-number", "Houston")
         )
         result shouldBe null
     }

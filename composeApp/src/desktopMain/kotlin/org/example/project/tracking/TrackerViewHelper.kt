@@ -10,7 +10,7 @@ class TrackerViewHelper : Observer<Shipment> {
 
     // Holds all currently tracked shipments and their UI states
     val trackedShipments = mutableStateListOf<TrackedShipment>()
-
+    val trackingError = mutableStateOf<String?>(null)
     // When shipment is changed, notifyObservers() is called and this updates it for the UI
     override fun update(subject: Shipment) {
         // Find matching shipment
@@ -53,6 +53,9 @@ class TrackerViewHelper : Observer<Shipment> {
             )
 
             trackedShipments += tracked
+            trackingError.value = null // clears any previous error message
+        } else {
+            trackingError.value = "Shipment '$id' not found."
         }
     }
 

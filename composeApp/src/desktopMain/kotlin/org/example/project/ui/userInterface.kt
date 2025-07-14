@@ -51,6 +51,14 @@ fun UserInterface(viewHelper: TrackerViewHelper) {
             }
         }
 
+        // Show error if shipment not found
+        viewHelper.trackingError.value?.let { errorMessage ->
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+            )
+        }
+
         Divider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Display tracked shipments

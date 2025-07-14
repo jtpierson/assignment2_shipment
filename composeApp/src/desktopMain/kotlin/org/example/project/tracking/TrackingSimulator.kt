@@ -28,7 +28,7 @@ object TrackingSimulator {
 
 
 
-    private fun processLine(line : String) {
+    private fun processLine(line: String) {
         val data = line.split(",")
         if (data.size < 2) return
 
@@ -36,9 +36,13 @@ object TrackingSimulator {
         val shipmentId = data[1]
 
         val strategy = UpdateStrategySelector.getStrategy(updateType)
-        val shipment = findShipment(shipmentId)
+        if (strategy == null) {
+            println("No strategy for update type: $updateType")
+            return
+        }
 
-        val result = strategy?.apply(shipment, data)
+        val shipment = findShipment(shipmentId)
+        val result = strategy.apply(shipment, data)
 
         if (updateType == "created" && result != null) {
             addShipment(result)

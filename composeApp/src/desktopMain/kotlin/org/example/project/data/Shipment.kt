@@ -3,10 +3,11 @@ package org.example.project.data
 import org.example.project.observer.Observer
 import org.example.project.observer.Subject
 
-class Shipment(
+abstract class Shipment(
     id : String,
     status : String,
     expectedDeliveryDateTimestamp : Long,
+    createdAtTimestamp : Long,
     currentLocation : String
 ) : Subject<Shipment> {
 
@@ -32,6 +33,13 @@ class Shipment(
             field = value
             notifyObservers()
         }
+    // Added for assignment 3
+    var createdAtTimestamp: Long = createdAtTimestamp
+        private set
+
+    private val _violations = mutableListOf<String>()
+    val violations: List<String>
+        get() = _violations
 
     private val _notes = mutableListOf<String>()
     val notes: List<String>
@@ -64,6 +72,7 @@ class Shipment(
             timestamp = timestamp
         )
         addUpdate(update)
+        checkForViolations()
     }
 
     fun markRelocated(newLocation : String, timestamp : Long) {
@@ -77,6 +86,7 @@ class Shipment(
 
         currentLocation = newLocation
         addUpdate(update)
+        checkForViolations()
     }
 
     fun markDelivered(timestamp: Long) {
@@ -90,6 +100,7 @@ class Shipment(
         )
 
         addUpdate(update)
+        checkForViolations()
     }
 
     fun markDelayed(newExpectedDelivery : Long, timestamp : Long) {
@@ -105,6 +116,7 @@ class Shipment(
         )
 
         addUpdate(update)
+        checkForViolations()
     }
 
     fun markLost(timestamp : Long) {
@@ -118,6 +130,7 @@ class Shipment(
         )
 
         addUpdate(update)
+        checkForViolations()
     }
 
     fun markCanceled(timestamp : Long) {
@@ -131,6 +144,7 @@ class Shipment(
         )
 
         addUpdate(update)
+        checkForViolations()
     }
 
     override fun registerObserver(observer: Observer<Shipment>) {
@@ -146,4 +160,18 @@ class Shipment(
             observer.update(this)
         }
     }
+
+    // Added for Assignment 3
+    protected fun setViolation(message : String) {
+        _violations.clear()
+        _violations.add(message)
+        notifyObservers()
+    }
+
+    protected fun clearViolations() {
+        _violations.clear()
+        notifyObservers()
+    }
+
+    abstract fun checkForViolations()
 }

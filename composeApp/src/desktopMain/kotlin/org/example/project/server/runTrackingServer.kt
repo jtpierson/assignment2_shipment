@@ -14,6 +14,12 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
 import org.example.project.network.ShipmentDto
 import org.example.project.util.formatTimestamp
+import io.ktor.server.application.call
+import io.ktor.server.application.install
+import io.ktor.server.http.content.defaultResource
+import io.ktor.server.http.content.resources
+import io.ktor.server.http.content.static
+import org.example.project.network.ShipmentDtoConverter
 
 fun main() {
     embeddedServer(Netty, port = 8080) {
@@ -31,6 +37,11 @@ private fun Application.configureServerRoutes() {
     }
 
     routing {
+
+        static("/") {
+            resources("static")
+            defaultResource("index.html", "static")
+        }
         post("/update") {
             val updateText = call.receiveText()
             TrackingServer.handleUpdate(updateText)
@@ -43,22 +54,10 @@ private fun Application.configureServerRoutes() {
 
             if (shipment == null) {
                 call.respond(HttpStatusCode.NotFound)
-                return@get
+                return@get // exits {} block not the whole function
             }
 
-            val dto = ShipmentDto(
-                id = shipment.id,
-                status = shipment.status,
-                location = shipment.currentLocation,
-                expectedDelivery = formatTimestamp(shipment.expectedDeliveryDateTimestamp),
-                notes = shipment.notes,
-                updates = shipment.updateHistory.map {
-                    "Shipment went from ${it.previousStatus} to ${it.newStatus} on ${formatTimestamp(it.timestamp)}"
-                },
-                violations = shipment.violations
-            )
-
-            call.respond(dto)
+            call.respond(ShipmentDtoConverter.fromShipment(shipment))
         }
     }
 }

@@ -7,6 +7,14 @@ plugins {
     alias(libs.plugins.composeHotReload)
     kotlin("plugin.serialization") version "2.2.0"
 }
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlinx" && requested.name.startsWith("kotlinx-coroutines")) {
+            useVersion("1.7.3")
+        }
+    }
+}
+
 
 kotlin {
     jvm("desktop")
@@ -49,6 +57,7 @@ kotlin {
                 implementation("io.ktor:ktor-server-content-negotiation:2.3.5")
                 implementation("io.ktor:ktor-server-call-logging:2.3.5")
                 implementation("ch.qos.logback:logback-classic:1.4.11")
+                resources.srcDirs("src/desktopMain/resources")
             }
         }
 

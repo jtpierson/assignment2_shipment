@@ -18,6 +18,10 @@ object TrackingServer {
     ): Shipment? {
         val creator = ShipmentCreatorSelector.getCreator(type) ?: return null
         val shipment = creator.create(id, expected, location, createdAt)
+
+        // ✅ Attach server-side observer
+        shipment.registerObserver(ServerLogger())
+
         shipments[id] = shipment
         return shipment
     }
@@ -27,7 +31,8 @@ object TrackingServer {
 
         val keyword = parts.getOrNull(0) ?: return null
         val id = parts.getOrNull(1) ?: return null
-        val shipment = shipments[id] ?: return null
+
+        val shipment = shipments[id]
 
         val strategy = UpdateStrategySelector.getStrategy(keyword) ?: return null
         val updated = strategy.apply(shipment, parts)

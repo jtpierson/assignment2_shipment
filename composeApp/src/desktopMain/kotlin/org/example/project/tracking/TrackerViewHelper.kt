@@ -2,71 +2,44 @@ package org.example.project.tracking
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.example.project.data.Shipment
-import org.example.project.observer.Observer
-import org.example.project.observer.Subject
+import org.example.project.network.ShipmentDto
+import org.example.project.network.TrackingClient
 
-class TrackerViewHelper : Observer<Shipment> {
 
-    // Holds all currently tracked shipments and their UI states
+class TrackerViewHelper {
+
     val trackedShipments = mutableStateListOf<TrackedShipment>()
     val trackingError = mutableStateOf<String?>(null)
-    // When shipment is changed, notifyObservers() is called and this updates it for the UI
-    override fun update(subject: Shipment) {
-        // Find matching shipment
-        val tracked = trackedShipments.find { candidate -> candidate.id == subject.id } ?: return
 
-        tracked.status.value = subject.status
-        tracked.location.value = subject.currentLocation
-        tracked.expectedDelivery.value = formatTimestamp(subject.expectedDeliveryDateTimestamp)
-
-        tracked.notes.clear()
-        tracked.notes.addAll(subject.notes)
-
-        tracked.updates.clear()
-        tracked.updates.addAll(
-            subject.updateHistory.map { trackedUpdate ->
-                "Shipment went from ${trackedUpdate.previousStatus} to ${trackedUpdate.newStatus} on ${formatTimestamp(trackedUpdate.timestamp)}"
+    suspend fun trackShipment(id: String) {
+        try {
+            val dto: ShipmentDto = withContext(Dispatchers.IO) {
+                TrackingClient.getShipment(id)
             }
-        )
-    }
 
-    fun trackShipment(id: String) {
-        val shipment = TrackingSimulator.findShipment(id)
-
-        if (shipment != null) {
-            if (trackedShipments.any {trackedShipment -> trackedShipment.id == shipment.id }) return // Already tracked
-
-            shipment.registerObserver(this)
+            if (trackedShipments.any { it.id == dto.id }) return
 
             val tracked = TrackedShipment(
-                id = shipment.id,
-                status = mutableStateOf(shipment.status),
-                location = mutableStateOf(shipment.currentLocation),
-                expectedDelivery = mutableStateOf(formatTimestamp(shipment.expectedDeliveryDateTimestamp)),
-                notes = mutableStateListOf<String>().apply { addAll(shipment.notes) },
-                updates = mutableStateListOf<String>().apply {
-                    addAll(shipment.updateHistory.map {update ->
-                        "Shipment went from ${update.previousStatus} to ${update.newStatus} on ${formatTimestamp(update.timestamp)}"
-                    })
-                }
+                id = dto.id,
+                status = mutableStateOf(dto.status),
+                location = mutableStateOf(dto.location),
+                expectedDelivery = mutableStateOf(dto.expectedDelivery),
+                notes = mutableStateListOf<String>().apply { addAll(dto.notes) },
+                updates = mutableStateListOf<String>().apply { addAll(dto.updates) }
             )
 
             trackedShipments += tracked
-            trackingError.value = null // clears any previous error message
-        } else {
-            trackingError.value = "Shipment '$id' not found."
+            trackingError.value = null
+        } catch (e: Exception) {
+            trackingError.value = "Shipment '${id}' not found."
         }
     }
 
     fun stopTracking(id: String) {
-        val tracked = trackedShipments.find {trackedShipment -> trackedShipment.id == id } ?: return
-        TrackingSimulator.findShipment(id)?.removeObserver(this)
+        val tracked = trackedShipments.find { it.id == id } ?: return
         trackedShipments.remove(tracked)
-    }
-
-    private fun formatTimestamp(timestamp: Long): String {
-        val formatter = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        return formatter.format(java.util.Date(timestamp))
     }
 }

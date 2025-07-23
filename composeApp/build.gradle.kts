@@ -10,48 +10,60 @@ plugins {
 
 kotlin {
     jvm("desktop")
-    
+
     sourceSets {
-        val desktopMain by getting
+        val commonMain by getting {
+            dependencies {
+                // Compose UI (common subset)
+                implementation(compose.runtime)
+                implementation(compose.foundation)
+                implementation(compose.material3)
+                implementation(compose.ui)
+                implementation(compose.components.resources)
+                implementation(compose.components.uiToolingPreview)
 
-        commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
+                // Lifecycle (shared ViewModel logic)
+                implementation(libs.androidx.lifecycle.viewmodel)
+                implementation(libs.androidx.lifecycle.runtimeCompose)
 
-            // Core HTTP client and CIO engine
-            implementation("io.ktor:ktor-client-core:2.3.5")
-            implementation("io.ktor:ktor-client-cio:2.3.5")
+                // Ktor Client (cross-platform networking)
+                implementation("io.ktor:ktor-client-core:2.3.5")
+                implementation("io.ktor:ktor-client-cio:2.3.5")
+                implementation("io.ktor:ktor-client-content-negotiation:2.3.5")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
 
-            // For sending JSON and deserializing response bodies
-            implementation("io.ktor:ktor-client-content-negotiation:2.3.5")
-            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
-
-            // Kotlinx Serialization JSON
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+                // Serialization
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+            }
         }
-        val desktopTest by getting
-        desktopTest.dependencies {
-            implementation(libs.kotlin.test)
-            implementation(libs.kotest.api)
-            implementation(libs.kotest.engine)
-            implementation(libs.kotest.assertions)
-            implementation(libs.kotest.runner)
-            implementation("org.jetbrains.kotlin:kotlin-reflect")
 
+        val desktopMain by getting {
+            dependencies {
+                // Desktop-specific Compose
+                implementation(compose.desktop.currentOs)
+                implementation(libs.kotlinx.coroutinesSwing)
+
+                // Ktor Server (JVM-only)
+                implementation("io.ktor:ktor-server-core:2.3.5")
+                implementation("io.ktor:ktor-server-netty:2.3.5")
+                implementation("io.ktor:ktor-server-content-negotiation:2.3.5")
+                implementation("io.ktor:ktor-server-call-logging:2.3.5")
+                implementation("ch.qos.logback:logback-classic:1.4.11")
+            }
         }
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
+
+        val desktopTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotest.api)
+                implementation(libs.kotest.engine)
+                implementation(libs.kotest.assertions)
+                implementation(libs.kotest.runner)
+                implementation("org.jetbrains.kotlin:kotlin-reflect")
+            }
         }
     }
 }
-
 
 compose.desktop {
     application {
@@ -68,4 +80,3 @@ compose.desktop {
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 }
-

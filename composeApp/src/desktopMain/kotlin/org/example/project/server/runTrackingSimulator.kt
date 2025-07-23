@@ -1,0 +1,64 @@
+package org.example.project.server
+
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.application.Application
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.http.HttpStatusCode
+import kotlinx.serialization.json.Json
+import org.example.project.network.ShipmentDto
+import org.example.project.util.formatTimestamp
+
+fun main() {
+    embeddedServer(Netty, port = 8080) {
+        configureServerRoutes()
+    }.start(wait = true)
+}
+
+private fun Application.configureServerRoutes() {
+    install(ContentNegotiation) {
+        json(Json {
+            prettyPrint = true
+            isLenient = true
+            ignoreUnknownKeys = true
+        })
+    }
+
+    routing {
+        post("/update") {
+            val updateText = call.receiveText()
+            TrackingServer.handleUpdate(updateText)
+            call.respond(HttpStatusCode.OK)
+        }
+
+        get("/shipment/{id}") {
+            val id = call.parameters["id"]
+            val shipment = id?.let { TrackingServer.getShipment(it) }
+
+            if (shipment == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+
+            val dto = ShipmentDto(
+                id = shipment.id,
+                status = shipment.status,
+                location = shipment.currentLocation,
+                expectedDelivery = formatTimestamp(shipment.expectedDeliveryDateTimestamp),
+                notes = shipment.notes,
+                updates = shipment.updateHistory.map {
+                    "Shipment went from ${it.previousStatus} to ${it.newStatus} on ${formatTimestamp(it.timestamp)}"
+                },
+                violations = shipment.violations
+            )
+
+            call.respond(dto)
+        }
+    }
+}

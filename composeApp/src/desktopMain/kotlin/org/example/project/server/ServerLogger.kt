@@ -8,7 +8,7 @@ class ServerLogger : Observer<Shipment> {
     override fun update(subject: Shipment) {
         println(
             buildString {
-                append("🔔 ServerLogger: Shipment '${subject.id}' was updated.\n")
+                append("🔔 ServerLogger: Shipment '${subject.id}' - ${subject.type} was updated.\n")
                 append("   → Status: ${subject.status}\n")
                 append("   → Location: ${subject.currentLocation}\n")
                 append("   → Expected Delivery: ${subject.expectedDeliveryDateTimestamp}\n")

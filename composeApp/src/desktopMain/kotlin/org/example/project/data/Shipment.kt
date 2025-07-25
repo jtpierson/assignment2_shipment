@@ -5,6 +5,7 @@ import org.example.project.observer.Subject
 
 abstract class Shipment(
     id : String,
+    type: String,
     status : String,
     expectedDeliveryDateTimestamp : Long,
     createdAtTimestamp : Long,
@@ -14,6 +15,9 @@ abstract class Shipment(
     private val observers = mutableListOf<Observer<Shipment>>()
 
     var id: String = id
+        private set
+
+    var type: String = type
         private set
 
     var status: String = status

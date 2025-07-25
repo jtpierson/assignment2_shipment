@@ -2,11 +2,13 @@ package org.example.project.data
 
 class ExpressShipment(
     id: String,
+    type: String,
     expectedDeliveryDateTimestamp: Long,
     currentLocation: String,
     createdAtTimestamp: Long
 ) : Shipment(
     id = id,
+    type = type,
     status = "created", // All shipments start with being created
     expectedDeliveryDateTimestamp = expectedDeliveryDateTimestamp,
     createdAtTimestamp = createdAtTimestamp,

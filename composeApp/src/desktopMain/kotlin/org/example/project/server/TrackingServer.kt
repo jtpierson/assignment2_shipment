@@ -9,34 +9,23 @@ object TrackingServer {
 
     fun getShipment(id: String): Shipment? = shipments[id]
 
-    fun createShipment(
-        id: String,
-        type: String,
-        expected: Long,
-        location: String,
-        createdAt: Long
-    ): Shipment? {
-        val creator = ShipmentCreatorSelector.getCreator(type) ?: return null
-        val shipment = creator.create(id, expected, location, createdAt)
-
-        // ✅ Attach server-side observer
-        shipment.registerObserver(ServerLogger())
-
-        shipments[id] = shipment
-        return shipment
-    }
-
     fun handleUpdate(update: String): Shipment? {
         val parts = update.split(",").map { it.trim() }
 
         val keyword = parts.getOrNull(0) ?: return null
         val id = parts.getOrNull(1) ?: return null
 
-        val shipment = shipments[id]
-
         val strategy = UpdateStrategySelector.getStrategy(keyword) ?: return null
-        val updated = strategy.apply(shipment, parts)
-        updated?.let { shipments[it.id] = it }
+        val updated = strategy.apply(shipments[id], parts)
+
+        // 🔑 If createdStrategy produced a new shipment, we store it
+        if (keyword == "created" && updated != null) {
+            updated.registerObserver(ServerLogger())
+            shipments[id] = updated
+        } else if (updated != null) {
+            shipments[id] = updated
+        }
+
         return updated
     }
 }

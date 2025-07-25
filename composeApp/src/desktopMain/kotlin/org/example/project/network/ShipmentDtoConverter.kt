@@ -9,10 +9,11 @@ class ShipmentDtoConverter {
         fun fromShipment(shipment: Shipment): ShipmentDto {
             return ShipmentDto(
                 id = shipment.id,
+                type = shipment.type,
                 status = shipment.status,
                 location = shipment.currentLocation,
                 expectedDelivery = formatTimestamp(shipment.expectedDeliveryDateTimestamp),
-                notes = shipment.notes,
+                notes = shipment.notes + shipment.violations,
                 updates = shipment.updateHistory.map {
                     "Shipment went from ${it.previousStatus} to ${it.newStatus} on ${formatTimestamp(it.timestamp)}"
                 },

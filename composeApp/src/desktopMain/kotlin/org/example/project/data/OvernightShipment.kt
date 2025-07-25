@@ -2,11 +2,13 @@ package org.example.project.data
 
 class OvernightShipment(
     id: String,
+    type: String,
     expectedDeliveryDateTimestamp: Long,
     currentLocation: String,
     createdAtTimestamp: Long
 ) : Shipment(
     id = id,
+    type = type,
     status = "created",
     expectedDeliveryDateTimestamp = expectedDeliveryDateTimestamp,
     createdAtTimestamp = createdAtTimestamp,

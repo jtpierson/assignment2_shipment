@@ -1,37 +1,31 @@
 package org.example.project.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.Button
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.example.project.tracking.TrackedShipment
 import org.example.project.tracking.TrackerViewHelper
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.launch
 
 @Composable
 fun UserInterface(viewHelper: TrackerViewHelper) {
     val inputState = rememberTextFieldState()
+    val scope = rememberCoroutineScope()
+
 
     Column(modifier = Modifier.padding(16.dp)) {
 
@@ -45,7 +39,9 @@ fun UserInterface(viewHelper: TrackerViewHelper) {
         // Track button
         Row(modifier = Modifier.padding(vertical = 8.dp)) {
             Button(onClick = {
-                viewHelper.trackShipment(inputState.text.toString())
+                scope.launch {
+                    viewHelper.trackShipment(inputState.text.toString())
+                }
             }) {
                 Text("Track")
             }
@@ -83,6 +79,7 @@ fun TrackedShipmentCard(
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Text("Tracking shipment: ${shipment.id}")
+            Text("Type: ${shipment.type}")
             Text("Status: ${shipment.status.value}")
             Text("Location: ${shipment.location.value}")
             Text("Expected Delivery: ${shipment.expectedDelivery.value}")

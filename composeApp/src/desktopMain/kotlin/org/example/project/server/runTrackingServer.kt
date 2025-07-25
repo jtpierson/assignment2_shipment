@@ -19,6 +19,7 @@ import io.ktor.server.application.install
 import io.ktor.server.http.content.defaultResource
 import io.ktor.server.http.content.resources
 import io.ktor.server.http.content.static
+import io.ktor.server.http.content.staticResources
 import org.example.project.network.ShipmentDtoConverter
 
 fun main() {
@@ -38,9 +39,8 @@ private fun Application.configureServerRoutes() {
 
     routing {
 
-        static("/") {
-            resources("static")
-            defaultResource("index.html", "static")
+        staticResources("/", "static") {
+            default("index.html")
         }
         post("/update") {
             val updateText = call.receiveText()

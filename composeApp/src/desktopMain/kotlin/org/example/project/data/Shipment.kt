@@ -166,7 +166,7 @@ abstract class Shipment(
     }
 
     // Added for Assignment 3
-    protected fun setViolation(message : String) {
+     protected fun setViolation(message : String) {
         _violations.clear()
         _violations.add(message)
         notifyObservers()

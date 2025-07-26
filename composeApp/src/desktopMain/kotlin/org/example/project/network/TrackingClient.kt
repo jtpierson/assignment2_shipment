@@ -23,13 +23,6 @@ object TrackingClient {
         }
     }
 
-    suspend fun sendUpdate(update: String) {
-        client.post("http://localhost:8080/update") {
-            contentType(ContentType.Text.Plain)
-            setBody(update)
-        }
-    }
-
     suspend fun getShipment(id: String): ShipmentDto {
         println("? Requesting shipment $id")
         return client.get("http://localhost:8080/shipment/$id").body()

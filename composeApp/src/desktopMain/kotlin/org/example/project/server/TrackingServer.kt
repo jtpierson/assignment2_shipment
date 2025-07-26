@@ -1,7 +1,6 @@
 package org.example.project.server
 
 import org.example.project.data.Shipment
-import org.example.project.factory.ShipmentCreatorSelector
 import org.example.project.update.UpdateStrategySelector
 
 object TrackingServer {
@@ -18,11 +17,13 @@ object TrackingServer {
         val strategy = UpdateStrategySelector.getStrategy(keyword) ?: return null
         val updated = strategy.apply(shipments[id], parts)
 
-        // 🔑 If createdStrategy produced a new shipment, we store it
+        // If createdStrategy produced a new shipment, we store it
         if (keyword == "created" && updated != null) {
-            updated.registerObserver(ServerLogger())
+            updated.registerObserver(ServerLogger)
             shipments[id] = updated
-        } else if (updated != null) {
+            updated.notifyObservers()
+        }
+        else if (updated != null) {
             shipments[id] = updated
         }
 

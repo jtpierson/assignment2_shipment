@@ -9,7 +9,7 @@ class StandardShipment(
 ) : Shipment(
     id = id,
     type = type,
-    status = "created", // All shipments start with being created
+    status = "created",
     expectedDeliveryDateTimestamp = expectedDeliveryDateTimestamp,
     createdAtTimestamp = createdAtTimestamp,
     currentLocation = currentLocation

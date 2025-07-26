@@ -2,12 +2,11 @@ package org.example.project.server
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import org.example.project.data.Shipment
 
 class TrackingServerTest : FunSpec({
 
     beforeTest {
-        // Clear internal state between tests (ugly but necessary due to the object)
+        // Clear internal state between tests
         val shipmentsField = TrackingServer::class.java.getDeclaredField("shipments")
         shipmentsField.isAccessible = true
         val map = shipmentsField.get(TrackingServer) as MutableMap<*, *>

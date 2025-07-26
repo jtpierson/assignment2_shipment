@@ -2,22 +2,20 @@ package org.example.project.update
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import org.example.project.data.Shipment
+import org.example.project.data.StandardShipment
 
 class CanceledStrategyTest : FunSpec({
 
-    fun createShipment(
-        id: String = "s-cancel",
+    fun makeShipment(
+        id: String = "s1",
         type: String = "standard",
-        status: String = "created",
-        expected: Long = 0L,
-        createdAt: Long = 0L,
-        location: String = "Anywhere"
-    ): Shipment = FakeShipment(id, type, status, expected, createdAt, location)
+        expected: Long? = null,
+        location: String = "Anywhere",
+        createdAt: Long = 0L
+    ) = StandardShipment(id, type, expected, location, createdAt)
 
-    // *** apply marks shipment as canceled
     test("CanceledStrategy should mark shipment as canceled") {
-        val shipment = createShipment()
+        val shipment = makeShipment()
         val result = CanceledStrategy().apply(
             shipment,
             listOf("canceled", shipment.id, "123456789")
@@ -35,13 +33,13 @@ class CanceledStrategyTest : FunSpec({
     }
 
     test("CanceledStrategy should return null when data is too short") {
-        val shipment = createShipment()
+        val shipment = makeShipment()
         val result = CanceledStrategy().apply(shipment, listOf("canceled", shipment.id))
         result shouldBe null
     }
 
     test("CanceledStrategy should return null when timestamp is invalid") {
-        val shipment = createShipment()
+        val shipment = makeShipment()
         val result = CanceledStrategy().apply(
             shipment,
             listOf("canceled", shipment.id, "not-a-timestamp")
@@ -59,17 +57,3 @@ class CanceledStrategyTest : FunSpec({
         result shouldBe null
     }
 })
-
-// Local dummy subclass to enable testing abstract Shipment
-private class FakeShipment(
-    id: String,
-    type: String,
-    status: String,
-    expected: Long,
-    createdAt: Long,
-    location: String
-) : Shipment(id, type, status, expected, createdAt, location) {
-    override fun checkForViolations() {
-        // no-op for unit test
-    }
-}

@@ -16,14 +16,13 @@ class OvernightShipment(
 ) {
     override fun checkForViolations() {
         if (expectedDeliveryDateTimestamp == null) {
-            // We don't know delivery date yet, so can't validate
             clearViolations()
             return
         }
         val timeDiff = expectedDeliveryDateTimestamp!! - createdAtTimestamp
         val oneDayMillis = 24 * 60 * 60 * 1000L
 
-        // Allow small deviation window (e.g. 10 seconds) for timestamp precision issues
+        // Allow small deviation window
         val tolerance = 10 * 1000L
 
         if (kotlin.math.abs(timeDiff - oneDayMillis) > tolerance && status != "late") {

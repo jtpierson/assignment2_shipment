@@ -3,7 +3,6 @@ package org.example.project.server
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import org.example.project.data.ShippingUpdate
 import org.example.project.data.Shipment
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream

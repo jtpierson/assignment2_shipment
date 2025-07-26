@@ -7,7 +7,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
 import org.example.project.network.ShipmentDto
 
 class RouteIntegrationTest : FunSpec({

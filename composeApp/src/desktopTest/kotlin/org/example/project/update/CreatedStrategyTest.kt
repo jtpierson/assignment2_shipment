@@ -6,7 +6,7 @@ import org.example.project.factory.ShipmentCreatorSelector
 
 class CreatedStrategyTest : FunSpec({
 
-    // Register a simple creator (e.g., Express) for test use
+    // Register creator for test use
     beforeTest {
         ShipmentCreatorSelector.getCreator("express")
     }

@@ -11,7 +11,8 @@ object TrackingServer {
     fun handleUpdate(update: String): Shipment? {
         val parts = update.split(",").map { it.trim() }
 
-        val keyword = parts.getOrNull(0) ?: return null
+        val keyword = parts[0]
+        if (keyword.isBlank()) return null
         val id = parts.getOrNull(1) ?: return null
 
         val strategy = UpdateStrategySelector.getStrategy(keyword) ?: return null

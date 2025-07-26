@@ -2,13 +2,21 @@ package org.example.project.update
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import org.example.project.data.Shipment
+import org.example.project.data.StandardShipment
 
 class LostStrategyTest : FunSpec({
 
+    fun makeShipment(
+        id: String,
+        type: String = "standard",
+        expected: Long? = null,
+        location: String = "San Diego",
+        createdAt: Long = 1000L
+    ) = StandardShipment(id, type, expected, location, createdAt)
+
     // *** apply marks shipment as lost
     test("LostStrategy should mark shipment as lost") {
-        val shipment = Shipment("s10000", "relocated", 0L, "San Diego")
+        val shipment = makeShipment("s10000", location = "San Diego")
         val result = LostStrategy().apply(
             shipment,
             listOf("lost", "s10000", "123456789")
@@ -28,14 +36,14 @@ class LostStrategyTest : FunSpec({
 
     // *** apply returns null when data is too short and shipment is present
     test("LostStrategy should return null when data is too short") {
-        val shipment = Shipment("s10002", "relocated", 0L, "Denver")
+        val shipment = makeShipment("s10002", location = "Denver")
         val result = LostStrategy().apply(shipment, listOf("lost", "s10002")) // missing timestamp
         result shouldBe null
     }
 
     // *** apply returns null when timestamp is invalid
     test("LostStrategy should return null when timestamp is not a number") {
-        val shipment = Shipment("s10003", "relocated", 0L, "Las Vegas")
+        val shipment = makeShipment("s10003", location = "Las Vegas")
         val result = LostStrategy().apply(
             shipment,
             listOf("lost", "s10003", "not-a-timestamp")

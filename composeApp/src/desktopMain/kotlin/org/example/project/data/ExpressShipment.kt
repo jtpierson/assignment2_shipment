@@ -3,7 +3,7 @@ package org.example.project.data
 class ExpressShipment(
     id: String,
     type: String,
-    expectedDeliveryDateTimestamp: Long,
+    expectedDeliveryDateTimestamp: Long?,
     currentLocation: String,
     createdAtTimestamp: Long
 ) : Shipment(
@@ -16,7 +16,12 @@ class ExpressShipment(
 ) {
     // Express Shipment's must be delivered within 3 days.
     override fun checkForViolations() {
-        val timeDiff = expectedDeliveryDateTimestamp - createdAtTimestamp
+        if (expectedDeliveryDateTimestamp == null) {
+            // We don't know delivery date yet, so can't validate
+            clearViolations()
+            return
+        }
+        val timeDiff = expectedDeliveryDateTimestamp!! - createdAtTimestamp
         val maxAllowedMillis = 3 * 24 * 60 * 60 * 1000L // 3 days in ms
 
         if (timeDiff > maxAllowedMillis) {

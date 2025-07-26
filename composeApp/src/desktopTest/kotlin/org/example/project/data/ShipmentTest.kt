@@ -8,9 +8,20 @@ import org.example.project.observer.Observer
 
 class ShipmentTest : FunSpec({
 
+    fun createShipment(
+        id: String = "S-test",
+        type: String = "test-type",
+        status: String = "created",
+        expected: Long = 1000L,
+        createdAt: Long = 500L,
+        location: String = "Testville"
+    ): Shipment {
+        return FakeShipment(id, type, status, expected, createdAt, location)
+    }
+
     // *** addNote checks
     test("addNote should add to notes list and notify observers") {
-        val shipment = Shipment("S1", "created", 0L, "Boston")
+        val shipment = createShipment()
         val observer = TestObserver()
         shipment.registerObserver(observer)
 
@@ -21,7 +32,7 @@ class ShipmentTest : FunSpec({
     }
 
     test("addNote should preserve order of notes") {
-        val shipment = Shipment("S11", "created", 0L, "LA")
+        val shipment = createShipment()
         shipment.addNote("First note")
         shipment.addNote("Second note")
 
@@ -30,7 +41,7 @@ class ShipmentTest : FunSpec({
 
     // *** markShipped checks
     test("markShipped should update status and expected delivery") {
-        val shipment = Shipment("S2", "created", 0L, "NY")
+        val shipment = createShipment()
         shipment.markShipped(expectedDelivery = 123456789L, timestamp = 1111L)
 
         shipment.status shouldBe "shipped"
@@ -40,7 +51,7 @@ class ShipmentTest : FunSpec({
     }
 
     test("Observers should be notified on markShipped") {
-        val shipment = Shipment("S10", "created", 0L, "NYC")
+        val shipment = createShipment()
         val observer = TestObserver()
         shipment.registerObserver(observer)
 
@@ -51,7 +62,7 @@ class ShipmentTest : FunSpec({
 
     // *** markRelocated checks
     test("markRelocated should update location and add update entry") {
-        val shipment = Shipment("S3", "shipped", 0L, "Chicago")
+        val shipment = createShipment()
         shipment.markRelocated("Dallas", timestamp = 2222L)
 
         shipment.currentLocation shouldBe "Dallas"
@@ -61,7 +72,7 @@ class ShipmentTest : FunSpec({
 
     // *** markDelivered checks
     test("markDelivered should update status and add update entry") {
-        val shipment = Shipment("S6", "shipped", 0L, "Atlanta")
+        val shipment = createShipment()
         shipment.markDelivered(timestamp = 3333L)
 
         shipment.status shouldBe "delivered"
@@ -71,7 +82,7 @@ class ShipmentTest : FunSpec({
 
     // *** markDelayed checks
     test("markDelayed should update status, expected delivery, and add update") {
-        val shipment = Shipment("S7", "shipped", 0L, "Austin")
+        val shipment = createShipment()
         shipment.markDelayed(newExpectedDelivery = 999999L, timestamp = 4444L)
 
         shipment.status shouldBe "late"
@@ -81,7 +92,7 @@ class ShipmentTest : FunSpec({
 
     // *** markLost checks
     test("markLost should update status and add update") {
-        val shipment = Shipment("S8", "relocated", 0L, "Denver")
+        val shipment = createShipment()
         shipment.markLost(timestamp = 5555L)
 
         shipment.status shouldBe "lost"
@@ -90,7 +101,7 @@ class ShipmentTest : FunSpec({
 
     // *** markCanceled checks
     test("markCanceled should update status and add update entry") {
-        val shipment = Shipment("S9", "created", 0L, "San Francisco")
+        val shipment = createShipment()
         shipment.markCanceled(timestamp = 6666L)
 
         shipment.status shouldBe "canceled"
@@ -101,7 +112,7 @@ class ShipmentTest : FunSpec({
 
     // *** Observer management
     test("registerObserver and notifyObservers should trigger update") {
-        val shipment = Shipment("S4", "created", 0L, "LA")
+        val shipment = createShipment()
         val observer = TestObserver()
         shipment.registerObserver(observer)
 
@@ -111,7 +122,7 @@ class ShipmentTest : FunSpec({
     }
 
     test("removeObserver should prevent notifications") {
-        val shipment = Shipment("S5", "created", 0L, "Seattle")
+        val shipment = createShipment()
         val observer = TestObserver()
         shipment.registerObserver(observer)
         shipment.removeObserver(observer)
@@ -122,7 +133,7 @@ class ShipmentTest : FunSpec({
     }
 
     test("All registered observers should be notified") {
-        val shipment = Shipment("S12", "created", 0L, "Miami")
+        val shipment = createShipment()
         val observer1 = TestObserver()
         val observer2 = TestObserver()
         shipment.registerObserver(observer1)
@@ -133,8 +144,50 @@ class ShipmentTest : FunSpec({
         observer1.wasNotified shouldBe true
         observer2.wasNotified shouldBe true
     }
+
+    // *** setViolation should overwrite and notify
+    test("setViolation should add message and notify observers") {
+        val shipment = createShipment()
+        val observer = TestObserver()
+        shipment.registerObserver(observer)
+
+        shipment.setViolation("Invalid date")
+
+        shipment.violations shouldBe listOf("Invalid date")
+        observer.wasNotified shouldBe true
+    }
+
+    // *** clearViolations should empty the list and notify
+    test("clearViolations should remove all violations and notify observers") {
+        val shipment = createShipment()
+        shipment.setViolation("Old violation")
+
+        val observer = TestObserver()
+        shipment.registerObserver(observer)
+
+        shipment.clearViolations()
+
+        shipment.violations shouldBe emptyList()
+        observer.wasNotified shouldBe true
+    }
+
 })
 
+// Dummy test subclass of Shipment (since Shipment is abstract)
+private class FakeShipment(
+    id: String,
+    type: String,
+    status: String,
+    expected: Long,
+    createdAt: Long,
+    location: String
+) : Shipment(id, type, status, expected, createdAt, location) {
+    override fun checkForViolations() {
+        // No-op for testing
+    }
+}
+
+// Simple observer stub
 private class TestObserver : Observer<Shipment> {
     var wasNotified = false
     override fun update(subject: Shipment) {

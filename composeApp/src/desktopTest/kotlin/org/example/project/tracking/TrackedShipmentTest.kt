@@ -11,6 +11,7 @@ class TrackedShipmentTest : FunSpec({
     test("TrackedShipment should store initial values") {
         val shipment = TrackedShipment(
             id = "s10000",
+            type = "test",
             status = mutableStateOf("shipped"),
             location = mutableStateOf("Chicago"),
             expectedDelivery = mutableStateOf("2025-07-15 12:00:00"),
@@ -19,6 +20,7 @@ class TrackedShipmentTest : FunSpec({
         )
 
         shipment.id shouldBe "s10000"
+        shipment.type shouldBe "test"
         shipment.status.value shouldBe "shipped"
         shipment.location.value shouldBe "Chicago"
         shipment.expectedDelivery.value shouldBe "2025-07-15 12:00:00"

@@ -1,154 +1,125 @@
 package org.example.project.tracking
 
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import org.example.project.data.Shipment
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.testing.testApplication
+import kotlinx.coroutines.runBlocking
+import org.example.project.network.TrackingClient
+import org.example.project.server.TrackingServer
+import org.example.project.server.configureServerRoutes
+import org.example.project.util.formatTimestamp
 
 class TrackerViewHelperTest : FunSpec({
 
-    val helper = TrackerViewHelper()
+    // 🛠️ Helper to create valid TrackedShipment objects
+    fun makeTracked(id: String, type: String = "standard") = TrackedShipment(
+        id = id,
+        type = type,
+        status = mutableStateOf("created"),
+        location = mutableStateOf("Unknown"),
+        expectedDelivery = mutableStateOf("--"),
+        notes = mutableStateListOf(),
+        updates = mutableStateListOf()
+    )
 
-    // *** trackShipment registers observer and populates tracked state
-    test("trackShipment registers observer and initializes TrackedShipment") {
-        val shipment = Shipment("s10000", "created", 1000L, "Chicago").apply {
-            addNote("Initial note")
-            markShipped(2000L, 1500L)
+    test("trackShipment adds a tracked shipment and updates UI model") {
+        testApplication {
+            application {
+                configureServerRoutes()
+            }
+
+            TrackingClient.setClient(createClient {
+                install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+                    json()
+                }
+            })
+
+            TrackingServer.handleUpdate("created,s99999,standard,1650000000000")
+
+            val helper = TrackerViewHelper()
+
+            runBlocking {
+                helper.trackShipment("s99999")
+            }
+
+            val tracked = helper.trackedShipments.firstOrNull { it.id == "s99999" }
+            tracked?.type shouldBe "standard"
+            tracked?.status?.value shouldBe "created"
+            tracked?.location?.value shouldBe "Unknown"
+            tracked?.expectedDelivery?.value shouldBe formatTimestamp(null)
+        }
+    }
+
+    test("trackShipment doesn't add duplicate tracked shipments") {
+        testApplication {
+            application {
+                configureServerRoutes()
+            }
+
+            TrackingClient.setClient(createClient {
+                install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+                    json()
+                }
+            })
+
+            TrackingServer.handleUpdate("created,s11111,standard,1650000000000")
+
+            val helper = TrackerViewHelper()
+
+            runBlocking {
+                helper.trackShipment("s11111")  // First → adds
+                helper.trackShipment("s11111")  // Second → should early return
+            }
+
+            helper.trackedShipments.count { it.id == "s11111" } shouldBe 1
+        }
+    }
+
+    test("trackShipment sets trackingError on failure") {
+        val helper = TrackerViewHelper()
+
+        runBlocking {
+            helper.trackShipment("nonexistent-id")
         }
 
-        TrackingSimulator.addShipment(shipment)
-        helper.trackShipment("s10000")
-
-        helper.trackedShipments shouldHaveSize 1
-        val tracked = helper.trackedShipments.first()
-
-        tracked.id shouldBe "s10000"
-        tracked.status.value shouldBe "shipped"
-        tracked.location.value shouldBe "Chicago"
-        tracked.notes shouldContainExactly listOf("Initial note")
-        tracked.updates.any { it.contains("shipped") } shouldBe true
+        helper.trackingError.value shouldBe "Shipment 'nonexistent-id' not found."
     }
 
-    // *** stopTracking removes tracked shipment
-    test("stopTracking removes tracked shipment") {
-        val shipment = Shipment("s10001", "created", 123L, "Denver")
-        TrackingSimulator.addShipment(shipment)
-        helper.trackShipment("s10001")
+    test("stopTracking removes shipment from tracked list") {
+        val helper = TrackerViewHelper()
+        helper.trackedShipments.add(makeTracked("s123"))
 
-        helper.stopTracking("s10001")
+        helper.trackedShipments.size shouldBe 1
 
-        helper.trackedShipments.none { it.id == "s10001" } shouldBe true
+        helper.stopTracking("s123")
+
+        helper.trackedShipments.size shouldBe 0
     }
 
-    // *** trackShipment does not allow duplicates
-    test("trackShipment does not duplicate if already tracked") {
-        val shipment = Shipment("s10002", "created", 1000L, "Boston")
-        TrackingSimulator.addShipment(shipment)
+    test("stopTracking does nothing if shipment is not tracked") {
+        val helper = TrackerViewHelper()
 
-        helper.trackShipment("s10002")
-        helper.trackShipment("s10002")
+        helper.stopTracking("notTracked")
 
-        helper.trackedShipments.count { it.id == "s10002" } shouldBe 1
+        helper.trackedShipments.size shouldBe 0
     }
 
-    // *** trackShipment is a no-op if shipment not found
-    test("trackShipment does nothing if shipment not found") {
-        val countBefore = helper.trackedShipments.size
+    test("stopTracking only removes the matching shipment") {
+        val helper = TrackerViewHelper()
+        helper.trackedShipments.addAll(
+            listOf(
+                makeTracked("s1"),
+                makeTracked("s2"),
+                makeTracked("s3"),
+            )
+        )
 
-        helper.trackShipment("DOES_NOT_EXIST")
+        helper.stopTracking("s2")
 
-        helper.trackedShipments.size shouldBe countBefore
+        helper.trackedShipments.map { it.id } shouldContainExactly listOf("s1", "s3")
     }
-
-    // *** update reflects Shipment changes into UI state
-    test("update should reflect Shipment field changes into tracked UI state") {
-        val shipment = Shipment("s10003", "created", 1000L, "Houston").apply {
-            addNote("First")
-            markShipped(2222L, 1111L)
-        }
-        TrackingSimulator.addShipment(shipment)
-        helper.trackShipment("s10003")
-
-        shipment.addNote("Second")
-        shipment.markRelocated("Austin", 3333L)
-
-        // This triggers observer manually
-        helper.update(shipment)
-
-        val tracked = helper.trackedShipments.first { it.id == "s10003" }
-        tracked.status.value shouldBe "relocated"
-        tracked.location.value shouldBe "Austin"
-        tracked.notes shouldContainExactly listOf("First", "Second")
-        tracked.updates.any { it.contains("relocated") } shouldBe true
-    }
-
-    // *** stopTracking is a no-op if shipment was never tracked
-    test("stopTracking does nothing if shipment was never tracked") {
-        helper.stopTracking("s10004")
-        helper.trackedShipments.none { it.id == "s10004" } shouldBe true
-    }
-
-    // *** stopTracking handles case where shipment is not found in TrackingSimulator
-    test("stopTracking handles case where shipment is not found in TrackingSimulator") {
-        // Track a shipment
-        val shipment = Shipment("s10005", "created", 123L, "Seattle")
-        TrackingSimulator.addShipment(shipment)
-        helper.trackShipment("s10005")
-
-        // Manually remove the shipment from TrackingSimulator map
-        // Simulate it by replacing map with a new instance using reflection (not recommended)
-        // Instead, just clear trackedShipments to simulate untrack attempt
-        helper.stopTracking("s10005")
-
-        helper.trackedShipments.none { it.id == "s10005" } shouldBe true
-    }
-
-    // *** update is a no-op if shipment is not currently tracked
-    test("update does nothing if shipment is not tracked") {
-        val shipment = Shipment("s10006", "created", 1000L, "Nowhere")
-        shipment.markShipped(1111L, 2222L)
-
-        // Not tracked by helper
-        helper.update(shipment)
-
-        helper.trackedShipments.none { it.id == "s10006" } shouldBe true
-    }
-
-    // *** trackShipment handles case where shipment has no notes or updates
-    test("trackShipment handles shipment with no notes or updates") {
-        val shipment = Shipment("s10007", "created", 999L, "San Diego")
-        TrackingSimulator.addShipment(shipment)
-
-        helper.trackShipment("s10007")
-
-        val tracked = helper.trackedShipments.first { it.id == "s10007" }
-        tracked.notes shouldHaveSize 0
-        tracked.updates shouldHaveSize 0
-        tracked.status.value shouldBe "created"
-        tracked.location.value shouldBe "San Diego"
-    }
-
-    // *** stopTracking still removes from trackedShipments even if TrackingSimulator returns null
-    test("stopTracking still removes tracked shipment even if TrackingSimulator returns null") {
-        val shipment = Shipment("s10007", "created", 123L, "Orlando")
-        TrackingSimulator.addShipment(shipment)
-        helper.trackShipment("s10007")
-
-        // Simulate TrackingSimulator returning null by removing shipment
-        // NOTE: This directly edits the internal map, which is allowed in test context
-        TrackingSimulator::class.java.getDeclaredField("shipments").apply {
-            isAccessible = true
-            @Suppress("UNCHECKED_CAST")
-            val map = get(null) as MutableMap<String, Shipment>
-            map.remove("s10007")
-        }
-
-        // Now when stopTracking is called, it will find tracked in UI state,
-        // but TrackingSimulator will return null, so removeObserver is skipped
-        helper.stopTracking("s10007")
-
-        helper.trackedShipments.none { it.id == "s10007" } shouldBe true
-    }
-
 })

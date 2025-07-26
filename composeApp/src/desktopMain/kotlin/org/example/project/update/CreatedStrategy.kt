@@ -9,9 +9,9 @@ class CreatedStrategy : UpdateStrategy {
 
         val id = data[1]
         val type = data[2].lowercase()
-        val expectedDelivery = data[3].toLongOrNull() ?: return null
 
-        val createdAt = System.currentTimeMillis()
+        val createdAt = data[3].toLongOrNull() ?: return null
+        val expectedDelivery: Long? = null
         val location = "Unknown"
 
         val creator = ShipmentCreatorSelector.getCreator(type) ?: return null

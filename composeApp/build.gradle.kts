@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeHotReload)
     kotlin("plugin.serialization") version "2.2.0"
 }
+
 configurations.all {
     resolutionStrategy.eachDependency {
         if (requested.group == "org.jetbrains.kotlinx" && requested.name.startsWith("kotlinx-coroutines")) {
@@ -15,14 +16,12 @@ configurations.all {
     }
 }
 
-
 kotlin {
     jvm("desktop")
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                // Compose UI (common subset)
                 implementation(compose.runtime)
                 implementation(compose.foundation)
                 implementation(compose.material3)
@@ -30,28 +29,23 @@ kotlin {
                 implementation(compose.components.resources)
                 implementation(compose.components.uiToolingPreview)
 
-                // Lifecycle (shared ViewModel logic)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.runtimeCompose)
 
-                // Ktor Client (cross-platform networking)
                 implementation("io.ktor:ktor-client-core:2.3.5")
                 implementation("io.ktor:ktor-client-cio:2.3.5")
                 implementation("io.ktor:ktor-client-content-negotiation:2.3.5")
                 implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
 
-                // Serialization
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
             }
         }
 
         val desktopMain by getting {
             dependencies {
-                // Desktop-specific Compose
                 implementation(compose.desktop.currentOs)
                 implementation(libs.kotlinx.coroutinesSwing)
 
-                // Ktor Server (JVM-only)
                 implementation("io.ktor:ktor-server-core:2.3.5")
                 implementation("io.ktor:ktor-server-netty:2.3.5")
                 implementation("io.ktor:ktor-server-content-negotiation:2.3.5")
@@ -64,14 +58,22 @@ kotlin {
         val desktopTest by getting {
             dependencies {
                 implementation(libs.kotlin.test)
-                implementation(libs.kotest.api)
-                implementation(libs.kotest.engine)
-                implementation(libs.kotest.assertions)
-                implementation(libs.kotest.runner)
+
+                // ✅ Ensure correct Kotest modules are here
+                implementation("io.kotest:kotest-runner-junit5:5.9.0")
+                implementation("io.kotest:kotest-assertions-core:5.9.0")
+                implementation("io.kotest:kotest-framework-engine:5.9.0")
                 implementation("org.jetbrains.kotlin:kotlin-reflect")
+                implementation("io.ktor:ktor-server-test-host:2.3.5")
+
             }
         }
     }
+}
+
+// ✅ Ensure JUnit Platform is enabled for all test tasks
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }
 
 compose.desktop {
@@ -84,8 +86,4 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
 }

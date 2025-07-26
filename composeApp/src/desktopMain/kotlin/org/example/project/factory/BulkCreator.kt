@@ -7,7 +7,7 @@ class BulkCreator : ShipmentCreator {
     override fun create(
         id: String,
         type: String,
-        expected: Long,
+        expected: Long?,
         location: String,
         createdAt: Long
     ): Shipment {

@@ -15,13 +15,10 @@ class TrackerViewHelper {
 
     suspend fun trackShipment(id: String) {
         try {
-            println("reached here 0")
             val dto: ShipmentDto = withContext(Dispatchers.IO) {
                 TrackingClient.getShipment(id)
             }
-            println("reached here 1")
             if (trackedShipments.any { it.id == dto.id }) return
-            println("reached here 2")
 
             val tracked = TrackedShipment(
                 id = dto.id,
@@ -32,11 +29,9 @@ class TrackerViewHelper {
                 notes = mutableStateListOf<String>().apply { addAll(dto.notes) },
                 updates = mutableStateListOf<String>().apply { addAll(dto.updates) }
             )
-            println("reached here 3")
 
             trackedShipments += tracked
             trackingError.value = null
-            println("reached here 4")
 
             startPollingShipment(tracked.id)
 

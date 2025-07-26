@@ -2,13 +2,21 @@ package org.example.project.update
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import org.example.project.data.Shipment
+import org.example.project.data.StandardShipment
 
 class LocationStrategyTest : FunSpec({
 
+    fun makeShipment(
+        id: String = "s10000",
+        type: String = "standard",
+        expected: Long? = null,
+        location: String = "Chicago",
+        createdAt: Long = 1000L
+    ) = StandardShipment(id, type, expected, location, createdAt)
+
     // *** apply sets shipment status to relocated and updates location
     test("LocationStrategy should update status to relocated and change location") {
-        val shipment = Shipment("s10000", "shipped", 0L, "Chicago")
+        val shipment = makeShipment("s10000", location = "Chicago")
         val result = LocationStrategy().apply(
             shipment,
             listOf("location", "s10000", "123456789", "Dallas")
@@ -30,7 +38,7 @@ class LocationStrategyTest : FunSpec({
 
     // *** apply returns null when data list is too short and shipment is valid
     test("LocationStrategy should return null when data list is too short and shipment is valid") {
-        val shipment = Shipment("s10002", "shipped", 0L, "Seattle")
+        val shipment = makeShipment("s10002", location = "Seattle")
         val result = LocationStrategy().apply(
             shipment,
             listOf("location", "s10002", "123456789") // missing location
@@ -49,7 +57,7 @@ class LocationStrategyTest : FunSpec({
 
     // *** apply returns null when timestamp is not a number
     test("LocationStrategy should return null when timestamp is invalid") {
-        val shipment = Shipment("s10004", "shipped", 0L, "Austin")
+        val shipment = makeShipment("s10004", location = "Austin")
         val result = LocationStrategy().apply(
             shipment,
             listOf("location", "s10004", "not-a-number", "Houston")

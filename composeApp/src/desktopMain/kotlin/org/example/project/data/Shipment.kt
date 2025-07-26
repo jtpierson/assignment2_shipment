@@ -7,7 +7,7 @@ abstract class Shipment(
     id : String,
     type: String,
     status : String,
-    expectedDeliveryDateTimestamp : Long,
+    expectedDeliveryDateTimestamp : Long?,
     createdAtTimestamp : Long,
     currentLocation : String
 ) : Subject<Shipment> {
@@ -26,7 +26,7 @@ abstract class Shipment(
             notifyObservers()
         }
 
-    var expectedDeliveryDateTimestamp: Long = expectedDeliveryDateTimestamp
+    var expectedDeliveryDateTimestamp: Long? = expectedDeliveryDateTimestamp
         private set(value) {
             field = value
             notifyObservers()
@@ -166,13 +166,13 @@ abstract class Shipment(
     }
 
     // Added for Assignment 3
-     protected fun setViolation(message : String) {
+    fun setViolation(message : String) {
         _violations.clear()
         _violations.add(message)
         notifyObservers()
     }
 
-    protected fun clearViolations() {
+    fun clearViolations() {
         _violations.clear()
         notifyObservers()
     }

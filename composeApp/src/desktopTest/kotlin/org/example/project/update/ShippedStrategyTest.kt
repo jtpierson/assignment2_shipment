@@ -2,13 +2,21 @@ package org.example.project.update
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import org.example.project.data.Shipment
+import org.example.project.data.StandardShipment
 
 class ShippedStrategyTest : FunSpec({
 
+    fun makeShipment(
+        id: String,
+        type: String = "standard",
+        expected: Long? = null,
+        location: String = "Boston",
+        createdAt: Long = 1000L
+    ) = StandardShipment(id, type, expected, location, createdAt)
+
     // *** apply sets shipment status to shipped and updates expected delivery timestamp
     test("ShippedStrategy should update status to shipped and set expected delivery") {
-        val shipment = Shipment("s10000", "created", 0L, "Boston")
+        val shipment = makeShipment("s10000")
         val result = ShippedStrategy().apply(
             shipment,
             listOf("shipped", "s10000", "123456789", "987654321")
@@ -27,7 +35,7 @@ class ShippedStrategyTest : FunSpec({
 
     // *** apply returns null when expected delivery is missing
     test("ShippedStrategy should return null when expected delivery is missing") {
-        val shipment = Shipment("s10001", "created", 0L, "Chicago")
+        val shipment = makeShipment("s10001", location = "Chicago")
         val result = ShippedStrategy().apply(
             shipment,
             listOf("shipped", "s10001", "123456789") // missing expected delivery
@@ -37,7 +45,7 @@ class ShippedStrategyTest : FunSpec({
 
     // *** apply returns null when expected delivery is not a valid Long
     test("ShippedStrategy should return null when expected delivery is not a number") {
-        val shipment = Shipment("s10002", "created", 0L, "Dallas")
+        val shipment = makeShipment("s10002", location = "Dallas")
         val result = ShippedStrategy().apply(
             shipment,
             listOf("shipped", "s10002", "123456789", "not-a-number")
@@ -53,7 +61,7 @@ class ShippedStrategyTest : FunSpec({
 
     // *** apply returns null when timestamp is not a number
     test("ShippedStrategy should return null when timestamp is not a number") {
-        val shipment = Shipment("s10004", "created", 0L, "Houston")
+        val shipment = makeShipment("s10004", location = "Houston")
         val result = ShippedStrategy().apply(
             shipment,
             listOf("shipped", "s10004", "not-a-number", "999999999")

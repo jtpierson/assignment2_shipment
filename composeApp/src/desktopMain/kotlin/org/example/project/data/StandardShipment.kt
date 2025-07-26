@@ -3,7 +3,7 @@ package org.example.project.data
 class StandardShipment(
     id: String,
     type: String,
-    expectedDeliveryDateTimestamp: Long,
+    expectedDeliveryDateTimestamp: Long?,
     currentLocation: String,
     createdAtTimestamp: Long
 ) : Shipment(

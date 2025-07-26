@@ -3,13 +3,21 @@ package org.example.project.update
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
-import org.example.project.data.Shipment
+import org.example.project.data.StandardShipment
 
 class NoteAddedStrategyTest : FunSpec({
 
+    fun makeShipment(
+        id: String,
+        type: String = "standard",
+        expected: Long? = null,
+        location: String = "Phoenix",
+        createdAt: Long = 1000L
+    ) = StandardShipment(id, type, expected, location, createdAt)
+
     // *** apply adds note to shipment when valid
     test("NoteAddedStrategy should add note to shipment when data is valid") {
-        val shipment = Shipment("s10000", "created", 0L, "Phoenix")
+        val shipment = makeShipment("s10000")
         val result = NoteAddedStrategy().apply(
             shipment,
             listOf("noteadded", "s10000", "123456789", "Handle with care")
@@ -30,7 +38,7 @@ class NoteAddedStrategyTest : FunSpec({
 
     // *** apply returns null when data list is too short and shipment is present
     test("NoteAddedStrategy should return null when data list is too short and shipment is present") {
-        val shipment = Shipment("s10002", "created", 0L, "Austin")
+        val shipment = makeShipment("s10002", location = "Austin")
         val result = NoteAddedStrategy().apply(
             shipment,
             listOf("noteadded", "s10002", "123456789") // missing note

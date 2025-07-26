@@ -3,7 +3,7 @@ package org.example.project.data
 class OvernightShipment(
     id: String,
     type: String,
-    expectedDeliveryDateTimestamp: Long,
+    expectedDeliveryDateTimestamp: Long?,
     currentLocation: String,
     createdAtTimestamp: Long
 ) : Shipment(
@@ -15,7 +15,12 @@ class OvernightShipment(
     currentLocation = currentLocation
 ) {
     override fun checkForViolations() {
-        val timeDiff = expectedDeliveryDateTimestamp - createdAtTimestamp
+        if (expectedDeliveryDateTimestamp == null) {
+            // We don't know delivery date yet, so can't validate
+            clearViolations()
+            return
+        }
+        val timeDiff = expectedDeliveryDateTimestamp!! - createdAtTimestamp
         val oneDayMillis = 24 * 60 * 60 * 1000L
 
         // Allow small deviation window (e.g. 10 seconds) for timestamp precision issues

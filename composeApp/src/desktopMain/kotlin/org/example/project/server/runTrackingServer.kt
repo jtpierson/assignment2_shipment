@@ -12,13 +12,8 @@ import io.ktor.server.routing.routing
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.Json
-import org.example.project.network.ShipmentDto
-import org.example.project.util.formatTimestamp
 import io.ktor.server.application.call
 import io.ktor.server.application.install
-import io.ktor.server.http.content.defaultResource
-import io.ktor.server.http.content.resources
-import io.ktor.server.http.content.static
 import io.ktor.server.http.content.staticResources
 import org.example.project.network.ShipmentDtoConverter
 
@@ -28,7 +23,7 @@ fun main() {
     }.start(wait = true)
 }
 
-private fun Application.configureServerRoutes() {
+fun Application.configureServerRoutes() {
     install(ContentNegotiation) {
         json(Json {
             prettyPrint = true
@@ -49,12 +44,12 @@ private fun Application.configureServerRoutes() {
         }
 
         get("/shipment/{id}") {
-            val id = call.parameters["id"]
-            val shipment = id?.let { TrackingServer.getShipment(it) }
+            val id = call.parameters["id"]!!
+            val shipment = TrackingServer.getShipment(id)
 
             if (shipment == null) {
                 call.respond(HttpStatusCode.NotFound)
-                return@get // exits {} block not the whole function
+                return@get
             }
 
             call.respond(ShipmentDtoConverter.fromShipment(shipment))
